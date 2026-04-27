@@ -21,10 +21,14 @@ export async function submitContactForm(prevState: any, formData: FormData) {
 
   try {
     // 3. Send to Backend API via axios
+    const sanitizedPhone = (phone || "").replace(/\D/g, "");
+
     const inquiryData = {
       name,
       email: email || undefined,
-      mobile: phone || undefined,
+      mobile: sanitizedPhone || undefined,
+      course: program || undefined,
+      message,
       type: "contact" as const,
     };
 
@@ -41,7 +45,11 @@ export async function submitContactForm(prevState: any, formData: FormData) {
     console.error("Error submitting inquiry:", error.response?.data || error.message);
     
     // Handle Backend validation or connection errors
-    const errorMessage = error.response?.data?.message || "An unexpected error occurred. Please try again later.";
+    const backendErrors = error.response?.data?.errors;
+    const errorMessage =
+      (Array.isArray(backendErrors) && backendErrors.length > 0 && backendErrors[0]?.msg)
+      || error.response?.data?.message
+      || "An unexpected error occurred. Please try again later.";
     return { error: errorMessage };
   }
 }
